@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
     <script>
-    // 🔧 Manuell gepflegte Versionsinformation – steht ganz oben
-    const siteVersion = "Stand: 29. Mai 2025, 15:05 Uhr";
+    // 🔧 Manuell gepflegte Versionsinformation
+    const siteVersion = "Stand: 29. Mai 2025, 15:27 Uhr";
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -349,6 +349,12 @@
                 </select>
                 <button id="searchButton" class="search-button">Suchen</button>
             </div>
+            <div style="margin-top: 10px;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #444;">
+                    <input type="checkbox" id="langCheckbox" checked />
+                    Nur deutschsprachige Bücher anzeigen
+                    </label>
+            </div>
         </div>
 
         <div id="loadingIndicator" class="loading" style="display: none;">
@@ -388,6 +394,7 @@
         // DOM Elemente
         const searchInput = document.getElementById('searchInput');
         const searchType = document.getElementById('searchType');
+        const langCheckbox = document.getElementById('langCheckbox');
         const searchButton = document.getElementById('searchButton');
         const loadingIndicator = document.getElementById('loadingIndicator');
         const errorMessage = document.getElementById('errorMessage');
@@ -405,6 +412,7 @@
         sortSelect.addEventListener('change', sortAndDisplayBooks);
 
             async function performSearch() {
+            const books = await searchBooks(query, searchType.value, langCheckbox.checked);
             const query = searchInput.value.trim();
             if (!query) return;
 
@@ -428,16 +436,18 @@
             }
         }
 
-        async function searchBooks(query, type) {
+        async function searchBooks(query, type, restrictToGerman = true) {
             let searchQuery = query;
-            
-            // Suchtype-spezifische Formatierung
+
             if (type !== 'all') {
                 searchQuery = `${type}:${query}`;
             }
 
-            const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=40&orderBy=newest&printType=books&langRestrict=de`;
-            
+            let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=40&orderBy=newest&printType=books`;
+            if (restrictToGerman) {
+                url += `&langRestrict=de`;
+            }
+
             const response = await fetch(url);
             
             if (!response.ok) {
