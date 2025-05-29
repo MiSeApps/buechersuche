@@ -394,18 +394,7 @@
         });
         sortSelect.addEventListener('change', sortAndDisplayBooks);
 
-        // Debounce für bessere Performance
-        let searchTimeout;
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                if (searchInput.value.length > 2) {
-                    performSearch();
-                }
-            }, 500);
-        });
-
-        async function performSearch() {
+            async function performSearch() {
             const query = searchInput.value.trim();
             if (!query) return;
 
