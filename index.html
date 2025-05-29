@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+    <script>
+    // 🔧 Manuell gepflegte Versionsinformation – steht ganz oben
+    const siteVersion = "Stand: 29. Mai 2025, 14:30 Uhr";
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bücher Suche</title>
@@ -265,7 +269,7 @@
             color: #666;
             font-size: 14px;
         }
-
+               
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -369,6 +373,7 @@
         <div class="footer">
             <p>Daten bereitgestellt von Google Books</p>
         </div>
+        <div id="version-info"></div>
     </div>
 
     <script>
@@ -563,6 +568,10 @@
         window.addEventListener('load', () => {
             searchInput.focus();
         });
+
+        // Version wird in das Footer-Element eingefügt
+        document.getElementById("version-info").textContent = siteVersion;
+        
     </script>
 </body>
 </html>
