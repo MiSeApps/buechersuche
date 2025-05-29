@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <script>
-        const siteVersion = "Stand: 29. Mai 2025, 15:35 Uhr";
+        const siteVersion = "Stand: 29. Mai 2025, 15:55 Uhr";
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -449,19 +449,26 @@
             const data = await response.json();
             if (!data.items || data.items.length === 0) return [];
 
-            return data.items.map(item => ({
-                id: item.id,
-                title: item.volumeInfo.title || 'Titel unbekannt',
-                authors: item.volumeInfo.authors || ['Autor unbekannt'],
-                publishedDate: item.volumeInfo.publishedDate || '',
-                description: item.volumeInfo.description || '',
-                thumbnail: item.volumeInfo.imageLinks?.thumbnail?.replace('http:', 'https:') || '',
-                isbn: getISBN(item.volumeInfo.industryIdentifiers),
-                pageCount: item.volumeInfo.pageCount,
-                categories: item.volumeInfo.categories || [],
-                language: item.volumeInfo.language,
-                year: extractYear(item.volumeInfo.publishedDate)
-            }));
+           let books = data.items.map(item => ({
+    id: item.id,
+    title: item.volumeInfo.title || 'Titel unbekannt',
+    authors: item.volumeInfo.authors || ['Autor unbekannt'],
+    publishedDate: item.volumeInfo.publishedDate || '',
+    description: item.volumeInfo.description || '',
+    thumbnail: item.volumeInfo.imageLinks?.thumbnail?.replace('http:', 'https:') || '',
+    isbn: getISBN(item.volumeInfo.industryIdentifiers),
+    pageCount: item.volumeInfo.pageCount,
+    categories: item.volumeInfo.categories || [],
+    language: item.volumeInfo.language,
+    year: extractYear(item.volumeInfo.publishedDate)
+}));
+
+// ✅ Wenn "nur deutsche Bücher" angehakt ist, filtere clientseitig
+if (langGermanOnly.checked) {
+    books = books.filter(book => book.language === 'de');
+}
+
+return books;
         }
 
         function getISBN(identifiers) {
