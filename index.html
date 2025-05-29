@@ -2,8 +2,7 @@
 <html lang="de">
 <head>
     <script>
-    // 🔧 Manuell gepflegte Versionsinformation
-    const siteVersion = "Stand: 29. Mai 2025, 15:27 Uhr";
+        const siteVersion = "Stand: 29. Mai 2025, 15:35 Uhr";
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -112,7 +111,15 @@
             cursor: not-allowed;
             transform: none;
         }
-
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
         .loading {
             text-align: center;
             padding: 40px;
@@ -349,20 +356,15 @@
                 </select>
                 <button id="searchButton" class="search-button">Suchen</button>
             </div>
-            <div style="margin-top: 10px;">
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #444;">
-                    <input type="checkbox" id="langCheckbox" checked />
-                    Nur deutschsprachige Bücher anzeigen
-                    </label>
+            <!-- ✅ Checkbox eingefügt -->
+            <div class="checkbox-container">
+                <input type="checkbox" id="langGermanOnly" checked />
+                <label for="langGermanOnly">Nur deutschsprachige Bücher anzeigen</label>
             </div>
         </div>
 
-        <div id="loadingIndicator" class="loading" style="display: none;">
-            Bücher werden gesucht...
-        </div>
-
+        <div id="loadingIndicator" class="loading" style="display: none;">Bücher werden gesucht...</div>
         <div id="errorMessage" class="error" style="display: none;"></div>
-
         <div id="resultsContainer" class="results-container" style="display: none;">
             <div class="results-header">
                 <div id="resultsCount" class="results-count"></div>
@@ -391,10 +393,8 @@
         let currentBooks = [];
         let isLoading = false;
 
-        // DOM Elemente
         const searchInput = document.getElementById('searchInput');
         const searchType = document.getElementById('searchType');
-        const langCheckbox = document.getElementById('langCheckbox');
         const searchButton = document.getElementById('searchButton');
         const loadingIndicator = document.getElementById('loadingIndicator');
         const errorMessage = document.getElementById('errorMessage');
@@ -403,19 +403,17 @@
         const booksGrid = document.getElementById('booksGrid');
         const noResults = document.getElementById('noResults');
         const sortSelect = document.getElementById('sortSelect');
+        const langGermanOnly = document.getElementById('langGermanOnly');
 
-        // Event Listeners
         searchButton.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') performSearch();
         });
         sortSelect.addEventListener('change', sortAndDisplayBooks);
 
-            async function performSearch() {
-            const books = await searchBooks(query, searchType.value, langCheckbox.checked);
+        async function performSearch() {
             const query = searchInput.value.trim();
             if (!query) return;
-
             if (isLoading) return;
 
             isLoading = true;
@@ -436,29 +434,20 @@
             }
         }
 
-        async function searchBooks(query, type, restrictToGerman = true) {
-            let searchQuery = query;
-
-            if (type !== 'all') {
-                searchQuery = `${type}:${query}`;
-            }
-
+        async function searchBooks(query, type) {
+            let searchQuery = type !== 'all' ? `${type}:${query}` : query;
             let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=40&orderBy=newest&printType=books`;
-            if (restrictToGerman) {
-                url += `&langRestrict=de`;
+
+            // ✅ Sprache auf Deutsch einschränken, wenn Checkbox aktiviert
+            if (langGermanOnly.checked) {
+                url += '&langRestrict=de';
             }
 
             const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 
             const data = await response.json();
-            
-            if (!data.items || data.items.length === 0) {
-                return [];
-            }
+            if (!data.items || data.items.length === 0) return [];
 
             return data.items.map(item => ({
                 id: item.id,
@@ -490,23 +479,18 @@
 
         function sortAndDisplayBooks() {
             if (currentBooks.length === 0) return;
-            
             const sortType = sortSelect.value;
             let sortedBooks = [...currentBooks];
 
             switch (sortType) {
                 case 'newest':
-                    sortedBooks.sort((a, b) => b.year - a.year);
-                    break;
+                    sortedBooks.sort((a, b) => b.year - a.year); break;
                 case 'oldest':
-                    sortedBooks.sort((a, b) => a.year - b.year);
-                    break;
+                    sortedBooks.sort((a, b) => a.year - b.year); break;
                 case 'title':
-                    sortedBooks.sort((a, b) => a.title.localeCompare(b.title, 'de'));
-                    break;
+                    sortedBooks.sort((a, b) => a.title.localeCompare(b.title, 'de')); break;
                 case 'author':
-                    sortedBooks.sort((a, b) => a.authors[0].localeCompare(b.authors[0], 'de'));
-                    break;
+                    sortedBooks.sort((a, b) => a.authors[0].localeCompare(b.authors[0], 'de')); break;
             }
 
             displayBooksGrid(sortedBooks);
@@ -517,7 +501,6 @@
                 showNoResults();
                 return;
             }
-
             resultsCount.textContent = `${books.length} Bücher gefunden`;
             showResults();
             sortAndDisplayBooks();
@@ -579,14 +562,10 @@
             resultsContainer.style.display = 'none';
         }
 
-        // Fokus auf Suchfeld beim Laden
         window.addEventListener('load', () => {
             searchInput.focus();
+            document.getElementById("version-info").textContent = siteVersion;
         });
-
-        // Version wird in das Footer-Element eingefügt
-        document.getElementById("version-info").textContent = siteVersion;
-        
     </script>
 </body>
 </html>
