@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <script>
-        const siteVersion = "Stand: 31. Mai 2025, 18:13 Uhr";
+        const siteVersion = "Stand: 31. Mai 2025, 18:25 Uhr";
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -497,9 +497,9 @@
                     books = books.filter(book => {
                         return book.year && !isNaN(book.year) && book.year >= (currentYear - 15);
                     });
-                    yearFilterNotice.style.display = 'block';
+                    //yearFilterNotice.style.display = 'block';
                 } else {
-                    yearFilterNotice.style.display = 'none';
+                    //yearFilterNotice.style.display = 'none';
                 }
             
             return books;
@@ -564,7 +564,11 @@
                             ${book.description ? `<div class="book-description">${book.description}</div>` : ''}
                             ${book.isbn ? `
                                   <div class="book-isbn">ISBN: ${book.isbn}</div>
-                                  
+                                  <div class="book-amazon-link">
+                                    <a href="https://www.amazon.de/s?k=${book.isbn}" target="_blank" rel="noopener noreferrer">
+                                      Bei Amazon ansehen
+                                    </a>
+                                  </div>
                                 ` : ''}
                         </div>
                     </div>
