@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <script>
-        const siteVersion = "Stand: 31. Mai 2025, 18:25 Uhr";
+        const siteVersion = "Stand: 31. Mai 2025, 20:55 Uhr";
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -562,14 +562,22 @@
                             <div class="book-authors">${book.authors.join(', ')}</div>
                             ${book.year ? `<div class="book-year">Erschienen: ${book.year}</div>` : ''}
                             ${book.description ? `<div class="book-description">${book.description}</div>` : ''}
-                            ${book.isbn ? `
-                                  <div class="book-isbn">ISBN: ${book.isbn}</div>
-                                  <div class="book-amazon-link">
-                                    <a href="https://www.amazon.de/s?k=${book.isbn}" target="_blank" rel="noopener noreferrer">
-                                      Bei Amazon suchen
-                                    </a>
-                                  </div>
-                                ` : ''}
+                            ${book.isbn 
+                              ? `
+                                <div class="book-isbn">ISBN: ${book.isbn}</div>
+                                <div class="book-amazon-link">
+                                  <a href="https://www.amazon.de/s?k=${book.isbn}" target="_blank" rel="noopener noreferrer">
+                                    Bei Amazon suchen
+                                  </a>
+                                </div>
+                              ` 
+                              : `
+                                <div class="book-amazon-link">
+                                  <a href="https://www.amazon.de/s?k=${encodeURIComponent(book.title + ' ' + book.authors[0])}" target="_blank" rel="noopener noreferrer">
+                                    Bei Amazon suchen
+                                  </a>
+                                </div>
+                              `}
                         </div>
                     </div>
                 </div>
