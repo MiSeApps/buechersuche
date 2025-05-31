@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <script>
-        const siteVersion = "Stand: 31. Mai 2025, 17:18 Uhr";
+        const siteVersion = "Stand: 31. Mai 2025, 17:50 Uhr";
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -282,6 +282,21 @@
             color: #666;
             font-size: 14px;
         }
+
+        .book-amazon-link {
+            margin-top: 6px;
+        }
+        
+        .book-amazon-link a {
+            font-size: 13px;
+            color: #0073b1;
+            text-decoration: none;
+        }
+        
+        .book-amazon-link a:hover {
+            text-decoration: underline;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -366,9 +381,9 @@
               <input type="checkbox" id="yearRecentOnly" checked />
               <label for="yearRecentOnly">Nur Bücher der letzten 15 Jahre anzeigen</label>
             </div>
-            <p id="yearFilterNotice" style="display: none; font-style: italic; color: gray; margin-left: 1.5rem;">
-              Hinweis: Es werden nur Bücher der letzten 15 Jahre angezeigt.
-            </p>
+           // <p id="yearFilterNotice" style="display: none; font-style: italic; color: gray; margin-left: 1.5rem;">
+           //   Hinweis: Es werden nur Bücher der letzten 15 Jahre angezeigt.
+           // </p>
         </div>
 
         <div id="loadingIndicator" class="loading" style="display: none;">Bücher werden gesucht...</div>
@@ -550,7 +565,14 @@
                             <div class="book-authors">${book.authors.join(', ')}</div>
                             ${book.year ? `<div class="book-year">Erschienen: ${book.year}</div>` : ''}
                             ${book.description ? `<div class="book-description">${book.description}</div>` : ''}
-                            ${book.isbn ? `<div class="book-isbn">ISBN: ${book.isbn}</div>` : ''}
+                            ${book.isbn ? `
+                                  <div class="book-isbn">ISBN: ${book.isbn}</div>
+                                  <div class="book-amazon-link">
+                                    <a href="https://www.amazon.de/dp/${book.isbn}" target="_blank" rel="noopener noreferrer">
+                                      Bei Amazon ansehen
+                                    </a>
+                                  </div>
+                                ` : ''}
                         </div>
                     </div>
                 </div>
