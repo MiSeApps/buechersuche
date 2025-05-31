@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <script>
-        const siteVersion = "Stand: 31. Mai 2025, 17:50 Uhr";
+        const siteVersion = "Stand: 31. Mai 2025, 17:58 Uhr";
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -381,10 +381,7 @@
               <input type="checkbox" id="yearRecentOnly" checked />
               <label for="yearRecentOnly">Nur Bücher der letzten 15 Jahre anzeigen</label>
             </div>
-           // <p id="yearFilterNotice" style="display: none; font-style: italic; color: gray; margin-left: 1.5rem;">
-           //   Hinweis: Es werden nur Bücher der letzten 15 Jahre angezeigt.
-           // </p>
-        </div>
+           </div>
 
         <div id="loadingIndicator" class="loading" style="display: none;">Bücher werden gesucht...</div>
         <div id="errorMessage" class="error" style="display: none;"></div>
@@ -568,8 +565,8 @@
                             ${book.isbn ? `
                                   <div class="book-isbn">ISBN: ${book.isbn}</div>
                                   <div class="book-amazon-link">
-                                    <a href="https://www.amazon.de/dp/${book.isbn}" target="_blank" rel="noopener noreferrer">
-                                      Bei Amazon ansehen
+                                    <a href="https://www.amazon.de/s?k=${book.isbn}" target="_blank" rel="noopener noreferrer">
+                                      Bei Amazon suchen
                                     </a>
                                   </div>
                                 ` : ''}
