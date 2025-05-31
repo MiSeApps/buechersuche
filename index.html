@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <script>
-        const siteVersion = "Stand: 31. Mai 2025, 10:25 Uhr";
+        const siteVersion = "Stand: 31. Mai 2025, 17:18 Uhr";
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -420,7 +420,9 @@
             if (e.key === 'Enter') performSearch();
         });
         sortSelect.addEventListener('change', sortAndDisplayBooks);
-
+        langGermanOnly.addEventListener('change', performSearch);
+        yearRecentOnly.addEventListener('change', performSearch);
+        
         async function performSearch() {
             const query = searchInput.value.trim();
             if (!query) return;
@@ -593,8 +595,7 @@
             searchInput.focus();
             document.getElementById("version-info").textContent = siteVersion;
         });
-            langGermanOnly.addEventListener('change', performSearch);
-            yearRecentOnly.addEventListener('change', performSearch);
+            
     </script>
 </body>
 </html>
