@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <script>
-        const siteVersion = "Stand: 01. Juni 2025, 10:40 Uhr";
+        const siteVersion = "Stand: 01. Juni 2025, 13:00 Uhr";
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -570,26 +570,20 @@
                                     Bei Amazon suchen
                                   </a>
                                 </div>
-                                <div class="book-amazon-link">
-                                  <a href="https://sb-eckernfoerde.lmscloud.net/cgi-bin/koha/opac-search.pl?idx=nb&q=${book.isbn}" target="_blank" rel="noopener noreferrer">
-
-                                    In der Stadtbücherei Eckernförde suchen
-                                  </a>
-                                </div>
-                              ` 
+                                ` 
                               : `
                                 <div class="book-amazon-link">
                                   <a href="https://www.amazon.de/s?k=${encodeURIComponent(book.title + ' ' + book.authors[0])}" target="_blank" rel="noopener noreferrer">
                                     Bei Amazon suchen
                                   </a>
                                 </div>
-                                <div class="book-amazon-link">
-                                  <a href="https://sb-eckernfoerde.lmscloud.net/cgi-bin/koha/opac-search.pl?idx=ti&q=${encodeURIComponent(book.title)}" target="_blank" rel="noopener noreferrer">
-                                    In der Stadtbücherei Eckernförde suchen
-                                  </a>
-                                </div>
                               `}
                         </div>
+                        <div class="book-amazon-link">
+                              <a href="https://sb-eckernfoerde.lmscloud.net/cgi-bin/koha/opac-search.pl?idx=ti&q=${encodeURIComponent(book.title)}" target="_blank" rel="noopener noreferrer">
+                                In der Stadtbücherei Eckernförde suchen
+                              </a>
+                            </div>
                     </div>
                 </div>
             `).join('');
