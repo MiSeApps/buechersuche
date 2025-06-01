@@ -518,48 +518,66 @@
     }
 
     function sortAndDisplayBooks() {
-        const sortType = sortSelect.value;
-        const sortedBooks = [...currentBooks];
+    const sortType = sortSelect.value;
+    const sortedBooks = [...currentBooks];
 
-        switch (sortType) {
-            case 'newest': sortedBooks.sort((a, b) => b.year - a.year); break;
-            case 'oldest': sortedBooks.sort((a, b) => a.year - b.year); break;
-            case 'title': sortedBooks.sort((a, b) => a.title.localeCompare(b.title, 'de')); break;
-            case 'author': sortedBooks.sort((a, b) => a.authors[0].localeCompare(b.authors[0], 'de')); break;
+    switch (sortType) {
+        case 'newest':
+            sortedBooks.sort((a, b) => (b.year || 0) - (a.year || 0));
+            break;
+        case 'oldest':
+            sortedBooks.sort((a, b) => (a.year || 0) - (b.year || 0));
+            break;
+        case 'title':
+            sortedBooks.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'de'));
+            break;
+        case 'author':
+            sortedBooks.sort((a, b) => {
+                const authorA = (a.authors && a.authors[0]) ? a.authors[0] : '';
+                const authorB = (b.authors && b.authors[0]) ? b.authors[0] : '';
+                return authorA.localeCompare(authorB, 'de');
+            });
+            break;
         }
-
+    
         displayBooks(sortedBooks);
     }
+
 
     function displayBooks(books) {
         booksGrid.innerHTML = books.map(renderBookCard).join('');
     }
 
     function renderBookCard(book) {
-        const amazonLink = book.isbn
-            ? `https://www.amazon.de/s?k=${book.isbn}`
-            : `https://www.amazon.de/s?k=${encodeURIComponent(book.title + ' ' + book.authors[0])}`;
-        const stabiLink = `https://sb-eckernfoerde.lmscloud.net/cgi-bin/koha/opac-search.pl?idx=ti&q=${encodeURIComponent(book.title)}`;
-        return `
-            <div class="book-card">
-                <div class="book-content">
-                    <div class="book-cover">
-                        ${book.thumbnail ? `<img src="${book.thumbnail}" alt="${book.title}" onerror="this.style.display='none'">`
+    const authorText = (book.authors && book.authors.length > 0) ? book.authors.join(', ') : 'Autor unbekannt';
+    const amazonQuery = book.isbn
+        ? book.isbn
+        : encodeURIComponent(`${book.title} ${book.authors?.[0] || ''}`);
+    const amazonLink = `https://www.amazon.de/s?k=${amazonQuery}`;
+    const stabiLink = `https://sb-eckernfoerde.lmscloud.net/cgi-bin/koha/opac-search.pl?idx=ti&q=${encodeURIComponent(book.title)}`;
+
+    return `
+        <div class="book-card">
+            <div class="book-content">
+                <div class="book-cover">
+                    ${book.thumbnail
+                        ? `<img src="${book.thumbnail}" alt="${book.title}" onerror="this.style.display='none'">`
                         : '<div style="width: 80px; height: 120px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999;">Kein Cover</div>'}
-                    </div>
-                    <div class="book-info">
-                        <div class="book-title">${book.title}</div>
-                        <div class="book-authors">${book.authors.join(', ')}</div>
-                        ${book.year ? `<div class="book-year">Erschienen: ${book.year}</div>` : ''}
-                        ${book.description ? `<div class="book-description">${book.description}</div>` : ''}
-                        ${book.isbn ? `<div class="book-isbn">ISBN: ${book.isbn}</div>` : ''}
-                        <div class="book-amazon-link"><a href="${amazonLink}" target="_blank">Bei Amazon suchen</a></div>
-                        <div class="book-amazon-link"><a href="${stabiLink}" target="_blank">In der Stadtbücherei Eckernförde suchen</a></div>
-                    </div>
+                </div>
+                <div class="book-info">
+                    <div class="book-title">${book.title}</div>
+                    <div class="book-authors">${authorText}</div>
+                    ${book.year ? `<div class="book-year">Erschienen: ${book.year}</div>` : ''}
+                    ${book.description ? `<div class="book-description">${book.description}</div>` : ''}
+                    ${book.isbn ? `<div class="book-isbn">ISBN: ${book.isbn}</div>` : ''}
+                    <div class="book-amazon-link"><a href="${amazonLink}" target="_blank">Bei Amazon suchen</a></div>
+                    <div class="book-amazon-link"><a href="${stabiLink}" target="_blank">In der Stadtbücherei Eckernförde suchen</a></div>
                 </div>
             </div>
+        </div>
         `;
     }
+
 
     // ==== Utility-Funktionen ====
     function getISBN(identifiers) {
