@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <script>
-        const siteVersion = "Stand: 31. Mai 2025, 20:55 Uhr";
+        const siteVersion = "Stand: 01. Juni 2025, 10:30 Uhr";
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -564,10 +564,14 @@
                             ${book.description ? `<div class="book-description">${book.description}</div>` : ''}
                             ${book.isbn 
                               ? `
-                                <div class="book-isbn">ISBN: ${book.isbn}</div>
                                 <div class="book-amazon-link">
                                   <a href="https://www.amazon.de/s?k=${book.isbn}" target="_blank" rel="noopener noreferrer">
                                     Bei Amazon suchen
+                                  </a>
+                                </div>
+                                <div class="book-amazon-link">
+                                  <a href="https://stadtbuecherei-eckernfoerde.lmscloud.net/cgi-bin/koha/opac-search.pl?q=${book.isbn}" target="_blank" rel="noopener noreferrer">
+                                    In der Stadtbücherei Eckernförde suchen
                                   </a>
                                 </div>
                               ` 
@@ -575,6 +579,11 @@
                                 <div class="book-amazon-link">
                                   <a href="https://www.amazon.de/s?k=${encodeURIComponent(book.title + ' ' + book.authors[0])}" target="_blank" rel="noopener noreferrer">
                                     Bei Amazon suchen
+                                  </a>
+                                </div>
+                                <div class="book-amazon-link">
+                                  <a href="https://stadtbuecherei-eckernfoerde.lmscloud.net/cgi-bin/koha/opac-search.pl?q=${encodeURIComponent(book.title)}" target="_blank" rel="noopener noreferrer">
+                                    In der Stadtbücherei Eckernförde suchen
                                   </a>
                                 </div>
                               `}
