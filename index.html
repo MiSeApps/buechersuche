@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <script>
-        const siteVersion = "Stand: 01. Juni 2025, 13:00 Uhr";
+        const siteVersion = "Stand: 01. Juni 2025, 15:38 Uhr";
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -408,226 +408,203 @@
         </div>
         <div class="version" id="version-info"></div>
     </div>
+<script>
+    // ==== Globale Variablen ====
+    const siteVersion = "Stand: 01. Juni 2025, 13:00 Uhr";
+    let currentBooks = [];
+    let isLoading = false;
 
-    <script>
-        let currentBooks = [];
-        let isLoading = false;
+    // ==== DOM-Elemente ====
+    const searchInput = document.getElementById('searchInput');
+    const searchType = document.getElementById('searchType');
+    const searchButton = document.getElementById('searchButton');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const errorMessage = document.getElementById('errorMessage');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const resultsCount = document.getElementById('resultsCount');
+    const booksGrid = document.getElementById('booksGrid');
+    const noResults = document.getElementById('noResults');
+    const sortSelect = document.getElementById('sortSelect');
+    const langGermanOnly = document.getElementById('langGermanOnly');
+    const yearRecentOnly = document.getElementById('yearRecentOnly');
 
-        const searchInput = document.getElementById('searchInput');
-        const searchType = document.getElementById('searchType');
-        const searchButton = document.getElementById('searchButton');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const errorMessage = document.getElementById('errorMessage');
-        const resultsContainer = document.getElementById('resultsContainer');
-        const resultsCount = document.getElementById('resultsCount');
-        const booksGrid = document.getElementById('booksGrid');
-        const noResults = document.getElementById('noResults');
-        const sortSelect = document.getElementById('sortSelect');
-        const langGermanOnly = document.getElementById('langGermanOnly');
-        const yearRecentOnly = document.getElementById('yearRecentOnly');
-        const yearFilterNotice = document.getElementById('yearFilterNotice');
-        
-        searchButton.addEventListener('click', performSearch);
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') performSearch();
-        });
+    // ==== Initialisierung ====
+    function init() {
+        searchButton.addEventListener('click', handleSearch);
+        searchInput.addEventListener('keypress', (e) => e.key === 'Enter' && handleSearch());
         sortSelect.addEventListener('change', sortAndDisplayBooks);
-        langGermanOnly.addEventListener('change', performSearch);
-        yearRecentOnly.addEventListener('change', performSearch);
-        
-        async function performSearch() {
-            const query = searchInput.value.trim();
-            if (!query) return;
-            if (isLoading) return;
+        langGermanOnly.addEventListener('change', handleSearch);
+        yearRecentOnly.addEventListener('change', handleSearch);
+        updateVersionInfo();
+    }
 
-            isLoading = true;
-            showLoading();
-            hideError();
-            hideResults();
+    function updateVersionInfo() {
+        const versionEl = document.getElementById('version-info');
+        if (versionEl) versionEl.textContent = siteVersion;
+    }
 
-            try {
-                const books = await searchBooks(query, searchType.value);
-                currentBooks = books;
-                displayResults(books);
-            } catch (error) {
-                showError('Fehler beim Suchen der Bücher: ' + error.message);
-                console.error('Search error:', error);
-            } finally {
-                isLoading = false;
-                hideLoading();
-            }
+    // ==== Suchlogik ====
+    async function handleSearch() {
+        const query = searchInput.value.trim();
+        if (!query || isLoading) return;
+
+        setLoading(true);
+        clearUIBeforeSearch();
+
+        try {
+            const books = await fetchBooks(query, searchType.value);
+            currentBooks = books;
+            showResultsOrMessage(books);
+        } catch (error) {
+            showError(`Fehler beim Suchen der Bücher: ${error.message}`);
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function fetchBooks(query, type) {
+        let searchQuery = type !== 'all' ? `${type}:${query}` : query;
+        let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=40&orderBy=newest&printType=books`;
+
+        if (langGermanOnly.checked) url += '&langRestrict=de';
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const data = await response.json();
+        if (!data.items) return [];
+
+        let books = data.items.map(parseBookData);
+
+        if (langGermanOnly.checked) {
+            books = books.filter(book => book.language === 'de');
         }
 
-        async function searchBooks(query, type) {
-            let searchQuery = type !== 'all' ? `${type}:${query}` : query;
-            let url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(searchQuery)}&maxResults=40&orderBy=newest&printType=books`;
-
-            // ✅ Sprache auf Deutsch einschränken, wenn Checkbox aktiviert
-            if (langGermanOnly.checked) {
-                url += '&langRestrict=de';
-            }
-
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-
-            const data = await response.json();
-            if (!data.items || data.items.length === 0) return [];
-
-               let books = data.items.map(item => ({
-                    id: item.id,
-                    title: item.volumeInfo.title || 'Titel unbekannt',
-                    authors: item.volumeInfo.authors || ['Autor unbekannt'],
-                    publishedDate: item.volumeInfo.publishedDate || '',
-                    description: item.volumeInfo.description || '',
-                    thumbnail: item.volumeInfo.imageLinks?.thumbnail?.replace('http:', 'https:') || '',
-                    isbn: getISBN(item.volumeInfo.industryIdentifiers),
-                    pageCount: item.volumeInfo.pageCount,
-                    categories: item.volumeInfo.categories || [],
-                    language: item.volumeInfo.language,
-                    year: extractYear(item.volumeInfo.publishedDate)
-                }));
-                
-                if (langGermanOnly.checked) {
-                    books = books.filter(book => book.language === 'de');
-                }
-                
-                // ✅ Jahr-Filter: Nur Bücher der letzten 15 Jahre
-                const currentYear = new Date().getFullYear();
-                if (yearRecentOnly.checked) {
-                    books = books.filter(book => {
-                        return book.year && !isNaN(book.year) && book.year >= (currentYear - 15);
-                    });
-                    //yearFilterNotice.style.display = 'block';
-                } else {
-                    //yearFilterNotice.style.display = 'none';
-                }
-            
-            return books;
-            }
-
-        function getISBN(identifiers) {
-            if (!identifiers) return '';
-            const isbn13 = identifiers.find(id => id.type === 'ISBN_13');
-            const isbn10 = identifiers.find(id => id.type === 'ISBN_10');
-            return isbn13?.identifier || isbn10?.identifier || '';
+        if (yearRecentOnly.checked) {
+            const currentYear = new Date().getFullYear();
+            books = books.filter(book => book.year && book.year >= currentYear - 15);
         }
 
-        function extractYear(dateString) {
-            if (!dateString) return 0;
-            const year = parseInt(dateString.split('-')[0]);
-            return isNaN(year) ? 0 : year;
-        }
+        return books;
+    }
 
-        function sortAndDisplayBooks() {
-            if (currentBooks.length === 0) return;
-            const sortType = sortSelect.value;
-            let sortedBooks = [...currentBooks];
+    function parseBookData(item) {
+        const info = item.volumeInfo;
+        return {
+            id: item.id,
+            title: info.title || 'Titel unbekannt',
+            authors: info.authors || ['Autor unbekannt'],
+            publishedDate: info.publishedDate || '',
+            description: info.description || '',
+            thumbnail: info.imageLinks?.thumbnail?.replace('http:', 'https:') || '',
+            isbn: getISBN(info.industryIdentifiers),
+            pageCount: info.pageCount,
+            categories: info.categories || [],
+            language: info.language,
+            year: extractYear(info.publishedDate)
+        };
+    }
 
-            switch (sortType) {
-                case 'newest':
-                    sortedBooks.sort((a, b) => b.year - a.year); break;
-                case 'oldest':
-                    sortedBooks.sort((a, b) => a.year - b.year); break;
-                case 'title':
-                    sortedBooks.sort((a, b) => a.title.localeCompare(b.title, 'de')); break;
-                case 'author':
-                    sortedBooks.sort((a, b) => a.authors[0].localeCompare(b.authors[0], 'de')); break;
-            }
-
-            displayBooksGrid(sortedBooks);
-        }
-
-        function displayResults(books) {
-            if (books.length === 0) {
-                showNoResults();
-                return;
-            }
+    // ==== Anzeige-Logik ====
+    function showResultsOrMessage(books) {
+        if (books.length === 0) {
+            showNoResults();
+        } else {
             resultsCount.textContent = `${books.length} Bücher gefunden`;
             showResults();
             sortAndDisplayBooks();
         }
+    }
 
-        function displayBooksGrid(books) {
-            booksGrid.innerHTML = books.map(book => `
-                <div class="book-card">
-                    <div class="book-content">
-                        <div class="book-cover">
-                            ${book.thumbnail ? 
-                                `<img src="${book.thumbnail}" alt="${book.title}" onerror="this.style.display='none'">` : 
-                                '<div style="width: 80px; height: 120px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px;">Kein Cover</div>'
-                            }
-                        </div>
-                        <div class="book-info">
-                            <div class="book-title">${book.title}</div>
-                            <div class="book-authors">${book.authors.join(', ')}</div>
-                            ${book.year ? `<div class="book-year">Erschienen: ${book.year}</div>` : ''}
-                            ${book.description ? `<div class="book-description">${book.description}</div>` : ''}
-                            ${book.isbn 
-                              ? `
-                                <div class="book-isbn">ISBN: ${book.isbn}</div>
-                                <div class="book-amazon-link">
-                                  <a href="https://www.amazon.de/s?k=${book.isbn}" target="_blank" rel="noopener noreferrer">
-                                    Bei Amazon suchen
-                                  </a>
-                                </div>
-                                ` 
-                              : `
-                                <div class="book-amazon-link">
-                                  <a href="https://www.amazon.de/s?k=${encodeURIComponent(book.title + ' ' + book.authors[0])}" target="_blank" rel="noopener noreferrer">
-                                    Bei Amazon suchen
-                                  </a>
-                                </div>
-                              `}
-                              <div class="book-amazon-link">
-                                  <a href="https://sb-eckernfoerde.lmscloud.net/cgi-bin/koha/opac-search.pl?idx=ti&q=${encodeURIComponent(book.title)}" target="_blank" rel="noopener noreferrer">
-                                    In der Stadtbücherei Eckernförde suchen
-                                  </a>
-                            </div>
-                        </div>
-                     </div>
+    function sortAndDisplayBooks() {
+        const sortType = sortSelect.value;
+        const sortedBooks = [...currentBooks];
+
+        switch (sortType) {
+            case 'newest': sortedBooks.sort((a, b) => b.year - a.year); break;
+            case 'oldest': sortedBooks.sort((a, b) => a.year - b.year); break;
+            case 'title': sortedBooks.sort((a, b) => a.title.localeCompare(b.title, 'de')); break;
+            case 'author': sortedBooks.sort((a, b) => a.authors[0].localeCompare(b.authors[0], 'de')); break;
+        }
+
+        displayBooks(sortedBooks);
+    }
+
+    function displayBooks(books) {
+        booksGrid.innerHTML = books.map(renderBookCard).join('');
+    }
+
+    function renderBookCard(book) {
+        const amazonLink = book.isbn
+            ? `https://www.amazon.de/s?k=${book.isbn}`
+            : `https://www.amazon.de/s?k=${encodeURIComponent(book.title + ' ' + book.authors[0])}`;
+        const stabiLink = `https://sb-eckernfoerde.lmscloud.net/cgi-bin/koha/opac-search.pl?idx=ti&q=${encodeURIComponent(book.title)}`;
+        return `
+            <div class="book-card">
+                <div class="book-content">
+                    <div class="book-cover">
+                        ${book.thumbnail ? `<img src="${book.thumbnail}" alt="${book.title}" onerror="this.style.display='none'">`
+                        : '<div style="width: 80px; height: 120px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999;">Kein Cover</div>'}
+                    </div>
+                    <div class="book-info">
+                        <div class="book-title">${book.title}</div>
+                        <div class="book-authors">${book.authors.join(', ')}</div>
+                        ${book.year ? `<div class="book-year">Erschienen: ${book.year}</div>` : ''}
+                        ${book.description ? `<div class="book-description">${book.description}</div>` : ''}
+                        ${book.isbn ? `<div class="book-isbn">ISBN: ${book.isbn}</div>` : ''}
+                        <div class="book-amazon-link"><a href="${amazonLink}" target="_blank">Bei Amazon suchen</a></div>
+                        <div class="book-amazon-link"><a href="${stabiLink}" target="_blank">In der Stadtbücherei Eckernförde suchen</a></div>
+                    </div>
                 </div>
-            `).join('');
-        }
+            </div>
+        `;
+    }
 
-        function showLoading() {
-            loadingIndicator.style.display = 'block';
-            searchButton.disabled = true;
-        }
+    // ==== Utility-Funktionen ====
+    function getISBN(identifiers) {
+        if (!identifiers) return '';
+        const isbn13 = identifiers.find(id => id.type === 'ISBN_13');
+        const isbn10 = identifiers.find(id => id.type === 'ISBN_10');
+        return isbn13?.identifier || isbn10?.identifier || '';
+    }
 
-        function hideLoading() {
-            loadingIndicator.style.display = 'none';
-            searchButton.disabled = false;
-        }
+    function extractYear(dateString) {
+        if (!dateString) return 0;
+        const year = parseInt(dateString.split('-')[0]);
+        return isNaN(year) ? 0 : year;
+    }
 
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-        }
+    // ==== UI-Helfer ====
+    function setLoading(state) {
+        isLoading = state;
+        loadingIndicator.style.display = state ? 'block' : 'none';
+        searchButton.disabled = state;
+    }
 
-        function hideError() {
-            errorMessage.style.display = 'none';
-        }
+    function clearUIBeforeSearch() {
+        errorMessage.style.display = 'none';
+        resultsContainer.style.display = 'none';
+        noResults.style.display = 'none';
+        booksGrid.innerHTML = '';
+    }
 
-        function showResults() {
-            resultsContainer.style.display = 'block';
-            noResults.style.display = 'none';
-        }
+    function showResults() {
+        resultsContainer.style.display = 'block';
+    }
 
-        function hideResults() {
-            resultsContainer.style.display = 'none';
-            noResults.style.display = 'none';
-        }
+    function showNoResults() {
+        noResults.style.display = 'block';
+    }
 
-        function showNoResults() {
-            noResults.style.display = 'block';
-            resultsContainer.style.display = 'none';
-        }
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+    }
 
-        window.addEventListener('load', () => {
-            searchInput.focus();
-            document.getElementById("version-info").textContent = siteVersion;
-        });
-            
-    </script>
+    // ==== Startpunkt ====
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+
 </body>
 </html>
