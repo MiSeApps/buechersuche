@@ -369,7 +369,7 @@
                     <option value="isbn">ISBN</option>
                     <option value="subject">Kategorie</option>
                 </select>
-                <button id="searchButton" class="search-button">Suchen</button>
+                <button id="searchButton" class="search-button" disabled>Suchen</button>
             </div>
             <!-- ✅ Checkbox für Bücher aus DE eingefügt -->
             <div class="checkbox-container">
@@ -443,6 +443,12 @@
         if (versionEl) versionEl.textContent = siteVersion;
     }
 
+    // Eingabe prüfen und Button aktivieren/deaktivieren
+        searchInput.addEventListener('input', () => {
+            const inputValue = searchInput.value.trim();
+            searchButton.disabled = inputValue.length === 0;
+        });
+    
     // ==== Suchlogik ====
     async function handleSearch() {
         const query = searchInput.value.trim();
